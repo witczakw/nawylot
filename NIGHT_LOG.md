@@ -289,3 +289,27 @@ działa lot powrotny (`departure_token`) i „dowolny kierunek” — potrzebuj�
    „POZ → dowolnie”.
 
 Żaden kod adaptera nie został dodany (zgodnie z zasadą „nie zgaduj”).
+
+---
+
+## M2.3 — cache odpowiedzi (tabela lub in-memory TTL 6h)
+
+**Plan**
+- `packages/providers/src/cache.ts`: `TtlCache` w pamięci (TTL 6 h, zegar wstrzykiwany do
+  testów), `cachedFlightProvider` / `cachedStayProvider` — opakowania na interfejsy z M2.1,
+  więc działają z każdym przyszłym adapterem.
+- Klucz: id providera + wszystkie pola zapytania. Równoległe zapytania o ten sam klucz czekają
+  na jedno wywołanie. Błędy nie trafiają do cache.
+- Testy na fałszywym providerze (licznik wywołań) i sztucznym zegarze.
+
+**Zrobione**
+- `TtlCache`, `cachedFlightProvider`, `cachedStayProvider`, 7 testów.
+
+**Decyzje**
+- In-memory zamiast tabeli: najprostsze, bez migracji; worker w MVP to jeden proces.
+  Minus: restart/deploy czyści cache (pierwszy skan po deployu zapłaci pełną cenę).
+- Oferta z cache zachowuje pierwotne `fetchedAt` — alert pokaże prawdziwą datę pobrania ceny.
+- TTL liczony od wysłania zapytania.
+
+**Do sprawdzenia ręcznie**
+- Czy przy kilku instancjach workera (np. Railway z repliką) nie przejść na tabelę w Postgresie.

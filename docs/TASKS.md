@@ -16,7 +16,7 @@
 ## M2 — pierwszy provider
 - [x] interfejsy w `providers/src/types.ts`
 - [ ] adapter SerpAPI Google Flights + fixture'y JSON do testów (bez sieci w testach)
-- [ ] cache odpowiedzi (tabela lub in-memory TTL 6h)
+- [x] cache odpowiedzi (tabela lub in-memory TTL 6h)
 - [ ] adapter SerpAPI Google Hotels
 
 ## M3 — pętla end-to-end
