@@ -33,13 +33,13 @@ importers:
   apps/worker:
     dependencies:
       '@nawylot/core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/core
       '@nawylot/db':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/db
       '@nawylot/providers':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/providers
       drizzle-orm:
         specifier: ^0.45.3
@@ -68,6 +68,12 @@ importers:
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
+
+  packages/notifications:
+    dependencies:
+      '@nawylot/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/providers:
     dependencies:

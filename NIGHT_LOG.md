@@ -398,3 +398,35 @@ serpapi.com; oraz decyzji, skąd brać nazwę miejsca dla kodu IATA celu (stała
 - Do historii trafia tylko najtańszy lot dla (trasa, dzień wylotu) z danego skanu, nie każdy
   wynik — mediana ma opisywać „cenę trasy”, a nie średnią z drogich połączeń.
 - Historia liczona od dnia wylotu (`date`); długość pobytu nie jest częścią klucza trasy.
+
+---
+
+## M3.3 — `packages/notifications`: interfejs kanału + TelegramChannel
+
+**Plan**
+- Interfejs z ARCHITECTURE.md: `NotificationChannel { id, send(user, msg) }`, `UserRef`,
+  `SendResult`. Typ `AlertMessage` w `core` (treść alertu buduje logika domenowa w M3.4,
+  kanał tylko ją dostarcza).
+- Kanał sam ustala adres użytkownika (np. `chat_id` Telegrama) przez zależność wstrzykniętą
+  przy tworzeniu kanału — nowy kanał = nowa implementacja, bez zmian w workerze.
+- TelegramChannel: wymaga dokumentacji Telegram Bot API (patrz BLOKADA niżej).
+
+**Zrobione**
+- `packages/notifications/src/types.ts`: `NotificationChannel`, `UserRef`, `SendResult`,
+  `ChannelId`; `core/alertMessage.ts`: typ `AlertMessage`.
+
+**Decyzje**
+- `AlertMessage` ma dwa linki (`links.flight`, `links.stay`) zamiast jednego `deepLink`
+  z ARCHITECTURE.md — zasada 2. Link do oferty w naszej aplikacji dojdzie z webem (M4).
+- `SendResult` rozróżnia „wysłane” i „brak adresu” (kanał włączony, konto niepołączone);
+  błędy dostarczenia to wyjątki.
+
+BLOKADA: M3.3 TelegramChannel — nie mogę potwierdzić kształtu API w dokumentacji:
+core.telegram.org jest zablokowane przez politykę sieci tej sesji (sprawdzone), a innej
+oficjalnej dokumentacji Bot API nie ma — potrzebuję od zespołu: dostępu do
+core.telegram.org w kolejnej sesji albo wklejenia do `docs/` fragmentów dokumentacji
+„Making requests”, `sendMessage` (parametry, limit długości tekstu), obiektów `Message`
+i `ResponseParameters` (`retry_after` przy 429) oraz jednej nagranej odpowiedzi
+`sendMessage` (sukces + błąd 403 „bot was blocked by the user”) jako fixture.
+
+Zadanie M3.3 zostaje **nieodhaczone** w TASKS.md (interfejs jest, kanału nie ma).
