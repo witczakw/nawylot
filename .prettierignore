@@ -1,0 +1,7 @@
+# Dokumentacji i konfiguracji Claude Code nie formatujemy automatycznie
+*.md
+.claude/
+pnpm-lock.yaml
+packages/db/drizzle/
+# Hexy wersalikami, tak jak w docs/DESIGN.md
+apps/web/src/styles/tokens.css

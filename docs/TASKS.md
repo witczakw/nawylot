@@ -1,7 +1,7 @@
 # Plan zadań (bierz od góry, odhaczaj po zrobieniu)
 
 ## M0 — szkielet
-- [ ] pnpm workspace, tsconfig bazowy (strict), eslint, prettier, vitest
+- [x] pnpm workspace, tsconfig bazowy (strict), eslint, prettier, vitest
 - [ ] docker-compose z Postgresem, `packages/db` z Drizzle + pierwsza migracja (tabele z ARCHITECTURE.md)
 - [ ] `apps/worker` z pg-boss: job `heartbeat` co minutę, logowanie
 - [ ] CI (GitHub Actions): typecheck + test + lint
