@@ -39,12 +39,18 @@ export interface ScanResult {
   flightQueries: number
   flightsFound: number
   offersSaved: number
+  pricesRecorded: number
 }
 
 export async function scanWatch(deps: ScanDeps, watchId: string): Promise<ScanResult> {
   const { db, flights, stays, log } = deps
   const now = deps.now()
-  const result: ScanResult = { flightQueries: 0, flightsFound: 0, offersSaved: 0 }
+  const result: ScanResult = {
+    flightQueries: 0,
+    flightsFound: 0,
+    offersSaved: 0,
+    pricesRecorded: 0,
+  }
 
   const [watch] = await db.select().from(watches).where(eq(watches.id, watchId))
   if (!watch?.active) {
@@ -147,11 +153,30 @@ export async function scanWatch(deps: ScanDeps, watchId: string): Promise<ScanRe
     })
   }
 
+  // Najniższa cena trasy na dany dzień wylotu z tego skanu. Zapis po policzeniu score,
+  // żeby bieżąca cena nie wchodziła do mediany, z którą ją porównujemy.
+  const observations = cheapestDistinct(
+    found,
+    found.length,
+    (flight) => flight.pricePerPerson,
+    (flight) => `${routeKey(flight.origin, flight.destination)}|${flight.outboundDate}`,
+  ).map((flight) => ({
+    routeKey: routeKey(flight.origin, flight.destination),
+    date: flight.outboundDate,
+    priceMinor: flight.pricePerPerson.amountMinor,
+    currency: flight.pricePerPerson.currency,
+    fetchedAt: flight.fetchedAt,
+  }))
+
   await db.transaction(async (tx) => {
     if (newOffers.length > 0) await tx.insert(offers).values(newOffers)
+    if (observations.length > 0) {
+      await tx.insert(priceHistory).values(observations).onConflictDoNothing()
+    }
     await tx.update(watches).set({ lastScannedAt: now }).where(eq(watches.id, watch.id))
   })
   result.offersSaved = newOffers.length
+  result.pricesRecorded = observations.length
 
   log.info('scan-watch done', { watchId, ...result })
   return result

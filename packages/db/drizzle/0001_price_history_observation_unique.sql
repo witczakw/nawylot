@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "price_history_observation_uq" ON "price_history" USING btree ("route_key","date","currency","fetched_at");

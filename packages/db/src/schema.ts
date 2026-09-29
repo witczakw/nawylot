@@ -15,6 +15,7 @@ import {
   text,
   time,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 
@@ -122,7 +123,11 @@ export const priceHistory = pgTable(
     currency: char('currency', { length: 3 }).notNull(),
     fetchedAt: utc('fetched_at').notNull(),
   },
-  (t) => [index('price_history_route_key_fetched_at_idx').on(t.routeKey, t.fetchedAt)],
+  (t) => [
+    index('price_history_route_key_fetched_at_idx').on(t.routeKey, t.fetchedAt),
+    // Ta sama odpowiedź providera (np. z cache) to jedna obserwacja, nie kilka.
+    uniqueIndex('price_history_observation_uq').on(t.routeKey, t.date, t.currency, t.fetchedAt),
+  ],
 )
 
 export const alertsSent = pgTable(

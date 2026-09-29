@@ -373,3 +373,28 @@ serpapi.com; oraz decyzji, skąd brać nazwę miejsca dla kodu IATA celu (stała
   (BLOKADA M2.2/M2.4). Po ich dodaniu: `registerScanWatch(boss, { db, flights:
   cachedFlightProvider(adapter), stays: cachedStayProvider(adapter), log, now: () => new Date() })`.
 - Szacunek bagażu (0 zł) i czy przy watchu „dowolnie” top-N nie powinno preferować różnych miast.
+
+---
+
+## M3.2 — zapis price_history
+
+**Plan**
+- W `scanWatch`: z wszystkich znalezionych lotów najtańsza cena na osobę dla każdej pary
+  (trasa, data wylotu) → wiersz `price_history` (`fetched_at` = data pobrania z providera).
+- Zapis w tej samej transakcji co oferty, **po** policzeniu score — bieżąca cena nie wpływa
+  na medianę, z którą jest porównywana.
+- Migracja `0001`: unikalny indeks (route_key, date, currency, fetched_at) + `ON CONFLICT DO
+  NOTHING` — ta sama obserwacja z cache (to samo `fetchedAt`) nie trafi do historii dwa razy.
+- Testy: jeden wiersz na trasę/datę z najniższą ceną, ponowny skan z cache bez duplikatu,
+  score nadal bez bieżącej ceny.
+
+**Zrobione**
+- Zapis `price_history` w `scanWatch` jak w planie, migracja
+  `0001_price_history_observation_unique.sql` (zastosowana też na bazie `nawylot`).
+- 2 nowe testy + poprawione dane testu mediany (każda obserwacja z innym czasem pobrania,
+  bo tak wygląda prawdziwa historia).
+
+**Decyzje**
+- Do historii trafia tylko najtańszy lot dla (trasa, dzień wylotu) z danego skanu, nie każdy
+  wynik — mediana ma opisywać „cenę trasy”, a nie średnią z drogich połączeń.
+- Historia liczona od dnia wylotu (`date`); długość pobytu nie jest częścią klucza trasy.

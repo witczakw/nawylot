@@ -91,7 +91,7 @@ function fakeProviders(flightOffers: FlightOffer[], stayOffers: StayOffer[]) {
 describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
   let db: Db
   let userId: string
-  const routeKeys = ['POZ-BCN', 'POZ-OPO', 'POZ-NAP', 'POZ-TIA']
+  const routeKeys = ['POZ-BCN', 'POZ-OPO', 'POZ-NAP', 'POZ-TIA', 'POZ-FAO', 'POZ-SVQ']
   const log = createLogger(() => undefined)
 
   async function insertWatch(values: Partial<typeof watches.$inferInsert> = {}) {
@@ -155,7 +155,7 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
 
     const result = await scanWatch(deps(providers), watch.id)
 
-    expect(result).toEqual({ flightQueries: 1, flightsFound: 3, offersSaved: 2 })
+    expect(result).toEqual({ flightQueries: 1, flightsFound: 3, offersSaved: 2, pricesRecorded: 1 })
     expect(providers.flightSearches).toEqual([
       {
         origin: 'POZ',
@@ -193,30 +193,20 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
 
   it('liczy score względem mediany cen trasy z ostatnich 90 dni w tej samej walucie', async () => {
     const watch = await insertWatch({ destinations: ['OPO'] })
-    const recent = new Date('2026-09-20T10:00:00Z')
+    // Kolejne obserwacje co godzinę od podanego momentu.
+    const observed = (from: string, amounts: number[], currency: string, date: string) =>
+      amounts.map((amount, i) => ({
+        routeKey: 'POZ-OPO',
+        date,
+        priceMinor: amount * 100,
+        currency,
+        fetchedAt: new Date(Date.parse(from) + i * 3_600_000),
+      }))
     await db.insert(priceHistory).values([
-      ...[450, 480, 500, 530, 900].map((zl) => ({
-        routeKey: 'POZ-OPO',
-        date: '2026-10-16',
-        priceMinor: zl * 100,
-        currency: 'PLN',
-        fetchedAt: recent,
-      })),
+      ...observed('2026-09-20T10:00:00Z', [450, 480, 500, 530, 900], 'PLN', '2026-10-16'),
       // Poza oknem 90 dni i w innej walucie — nie liczą się do mediany.
-      ...[100, 100, 100].map((zl) => ({
-        routeKey: 'POZ-OPO',
-        date: '2026-05-01',
-        priceMinor: zl * 100,
-        currency: 'PLN',
-        fetchedAt: new Date('2026-06-01T10:00:00Z'),
-      })),
-      ...[10, 10, 10].map((eur) => ({
-        routeKey: 'POZ-OPO',
-        date: '2026-10-16',
-        priceMinor: eur * 100,
-        currency: 'EUR',
-        fetchedAt: recent,
-      })),
+      ...observed('2026-06-01T10:00:00Z', [100, 100, 100], 'PLN', '2026-07-01'),
+      ...observed('2026-09-20T10:00:00Z', [10, 10, 10], 'EUR', '2026-10-16'),
     ])
     const providers = fakeProviders(
       [flight('OPO', 400, '2026-10-16T11:00')],
@@ -227,6 +217,58 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
 
     const [saved] = await db.select().from(offers).where(eq(offers.watchId, watch.id))
     expect(saved?.score).toBe(20)
+  })
+
+  it('zapisuje do price_history najniższą cenę trasy na dzień wylotu, bez duplikatów z cache', async () => {
+    const watch = await insertWatch({
+      destinations: ['FAO'],
+      dateFrom: '2026-10-16',
+      dateTo: '2026-10-19',
+      nightsMin: 2,
+      nightsMax: 3,
+    })
+    const providers = fakeProviders(
+      [
+        flight('FAO', 612, '2026-10-16T13:00'),
+        flight('FAO', 587, '2026-10-16T18:00'),
+        flight('FAO', 540, '2026-10-17T13:00', {
+          outboundDate: '2026-10-17',
+          returnDate: '2026-10-19',
+        }),
+      ],
+      [stay('Faro Guesthouse', 250)],
+    )
+
+    await scanWatch(deps(providers), watch.id)
+    // Drugi skan dostaje te same oferty (np. z cache) — to ta sama obserwacja.
+    await scanWatch(deps(providers), watch.id)
+
+    const history = await db
+      .select()
+      .from(priceHistory)
+      .where(eq(priceHistory.routeKey, 'POZ-FAO'))
+      .orderBy(priceHistory.date)
+    expect(history.map((h) => [h.date, h.priceMinor, h.currency, h.fetchedAt])).toEqual([
+      ['2026-10-16', 58_700, 'PLN', FLIGHTS_FETCHED_AT],
+      ['2026-10-17', 54_000, 'PLN', FLIGHTS_FETCHED_AT],
+    ])
+  })
+
+  it('bieżąca cena nie wchodzi do mediany, z którą jest porównywana', async () => {
+    const watch = await insertWatch({ destinations: ['SVQ'] })
+    const providers = fakeProviders(
+      [flight('SVQ', 200, '2026-10-16T12:00')],
+      [stay('Sevilla Centro', 300)],
+    )
+
+    await scanWatch(deps(providers), watch.id)
+
+    const [saved] = await db.select().from(offers).where(eq(offers.watchId, watch.id))
+    // Pusta historia przed skanem → wynik neutralny, mimo że po skanie cena jest w historii.
+    expect(saved?.score).toBe(0)
+    expect(
+      await db.select().from(priceHistory).where(eq(priceHistory.routeKey, 'POZ-SVQ')),
+    ).toHaveLength(1)
   })
 
   it('pomija lot, dla którego nie ma noclegu, ale zapisuje, że watch był skanowany', async () => {
