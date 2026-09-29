@@ -167,3 +167,25 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 
 **Do sprawdzenia ręcznie**
 - Czy bagaż ma być na osobę, czy jeden szacunek na cały wyjazd.
+
+---
+
+## M1.3 — `core/scoreDeal.ts`: score względem mediany z price_history
+
+**Plan**
+- `scoreDeal(price, history)` → liczba całkowita: o ile procent cena jest niższa od mediany
+  historii trasy (20 = 20% taniej niż zwykle, ujemna = drożej). Brak historii → `NEUTRAL_SCORE = 0`.
+- Za mała próbka (< `MIN_HISTORY_SAMPLES`) też daje wynik neutralny — mediana z 1–2 cen nic nie mówi.
+- Testy: brak historii, mała próbka, cena = mediana, 20% taniej, drożej, parzysta liczba próbek,
+  nieposortowana historia, inna waluta.
+
+**Zrobione**
+- `scoreDeal` jak w planie, 10 testów. `assertSameCurrency` wyeksportowane z `money.ts`.
+
+**Decyzje**
+- Score jako całkowity procent poniżej mediany (kolumna `offers.score` to integer).
+- `MIN_HISTORY_SAMPLES = 5` — poniżej tej liczby cen wynik neutralny.
+
+**Do sprawdzenia ręcznie**
+- Próg score dla alertu (PRD: „score > próg”) — przy braku historii score = 0, więc próg > 0
+  zablokowałby alerty dla nowych tras. Ustawiam go dopiero w M3 i opisuję tam.

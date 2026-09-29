@@ -14,7 +14,7 @@ export function money(amountMinor: number, currency: string): Money {
   return { amountMinor, currency }
 }
 
-function assertSameCurrency(a: Money, b: Money): void {
+export function assertSameCurrency(a: Money, b: Money): void {
   if (a.currency !== b.currency) {
     throw new Error(`Nie można łączyć kwot w różnych walutach: ${a.currency} i ${b.currency}`)
   }
