@@ -29,6 +29,12 @@ pnpm db:migrate
 pnpm dev                    # web + worker
 ```
 
+Testy integracyjne z bazą używają osobnej bazy i są pomijane, gdy `TEST_DATABASE_URL` nie jest ustawiony:
+```bash
+docker compose exec db createdb -U nawylot nawylot_test
+TEST_DATABASE_URL=postgres://nawylot:nawylot@localhost:5432/nawylot_test pnpm test
+```
+
 ## Praca z Claude Code
 Kontekst i zasady projektu są w `CLAUDE.md`. Kolejne zadania: `docs/TASKS.md`.
 Typowy start sesji: „Przeczytaj CLAUDE.md i docs/TASKS.md, weź pierwsze niezrobione zadanie.”

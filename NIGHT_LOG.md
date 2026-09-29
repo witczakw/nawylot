@@ -40,3 +40,40 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 **Do sprawdzenia ręcznie**
 - Node 20 ma EOL od 30.04.2026. Jeśli zespół przejdzie na Node 22, można podbić Vitest do 5
   i pg-boss do 12.
+
+---
+
+## M0.2 — docker-compose z Postgresem, `packages/db` z Drizzle + pierwsza migracja
+
+**Plan**
+- `docker-compose.yml` już istnieje (Postgres 16) — bez zmian.
+- `packages/db`: `src/schema.ts` (users, notification_prefs, telegram_links, watches, offers,
+  price_history, alerts_sent), `src/client.ts` (połączenie node-postgres), `drizzle.config.ts`,
+  migracja SQL wygenerowana przez `drizzle-kit generate` do `packages/db/drizzle/`.
+- Test integracyjny: migracje na `TEST_DATABASE_URL` + zapis/odczyt watcha, sprawdzenie
+  ograniczeń (np. `nights_min <= nights_max`). Bez `TEST_DATABASE_URL` test jest pomijany.
+
+**Zrobione**
+- `packages/db`: schemat 7 tabel z ARCHITECTURE.md, migracja `drizzle/0000_init.sql`
+  (`pnpm db:generate` / `pnpm db:migrate` przez drizzle-kit), `createDb`, `runMigrations`.
+- `@nawylot/db/testing`: `connectTestDb()` — łączy z `TEST_DATABASE_URL` i puszcza migracje pod
+  blokadą doradczą (pakiety testują się równolegle).
+- Testy (4, na prawdziwym Postgresie): watch „dowolnie” (`destinations = null`), daty jako
+  `YYYY-MM-DD`, CHECK-i, kaskadowe usuwanie. `pnpm db:migrate` sprawdzone na bazie `nawylot`.
+
+**Decyzje**
+- `watches.budget_minor` = budżet **na osobę** (PRD: „budżet całkowity (lot + nocleg) na osobę”).
+- `offers.total_minor` = koszt całego wyjazdu dla wszystkich `pax` (zgodnie z `totalCost`:
+  lot × pax + nocleg). Kwota na osobę liczona na wyjściu.
+- Dodane kolumny `currency char(3)` przy każdej kwocie (konwencja z CLAUDE.md), `created_at`
+  w users/watches, `users.timezone` (IANA, domyślnie `Europe/Warsaw`) — potrzebne do quiet hours.
+- `deep_links` typowane jako `{ flight, stay }` — dwa osobne linki (zasada 2).
+- Kanały jako enum Postgresa `notification_channel` (expo/telegram/email/webpush jak w ARCHITECTURE.md).
+- `quiet_hours_from/to` jako `time` w strefie użytkownika; `telegram_links.chat_id` jako bigint.
+- Tabel billingowych (M4.5) celowo nie ma.
+- drizzle.config.ts wczytuje `../../.env` tylko wtedy, gdy `DATABASE_URL` nie jest ustawiony.
+
+**Do sprawdzenia ręcznie**
+- Czy `users` ma już mieć e-mail / dane logowania — nie ma tego w szkicu, więc nie dodawałem.
+- Czy PRD-owe „preferowane dni (pt–nd)” i „minimalny standard noclegu” mają trafić do `watches`
+  (szkic w ARCHITECTURE.md ich nie ma).
