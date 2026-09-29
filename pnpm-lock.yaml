@@ -57,6 +57,12 @@ importers:
         specifier: ^0.31.11
         version: 0.31.11
 
+  packages/providers:
+    dependencies:
+      '@nawylot/core':
+        specifier: workspace:*
+        version: link:../core
+
 packages:
 
   '@cacheable/memory@2.2.0':

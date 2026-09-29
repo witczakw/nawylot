@@ -246,3 +246,28 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
   `koszt_watcha_mies = zapytania_na_skan × skany_na_dobę × 30 × koszt_zapytania`; przy 24
   zapytaniach/dobę to 720 zapytań/mies. na watch. Cennika SerpAPI nie mogłem sprawdzić
   (serpapi.com zablokowane w tej sesji).
+
+---
+
+## M2.1 — interfejsy w `providers/src/types.ts`
+
+**Plan**
+- `packages/providers` zależne tylko od `@nawylot/core` (typ `Money`).
+- `FlightProvider.searchFlights(FlightSearch) → FlightOffer[]`,
+  `StayProvider.searchStays(StaySearch) → StayOffer[]`.
+- Kształt własny (domenowy), niezależny od providera; adaptery mapują odpowiedź API na te typy.
+  Każda oferta ma `fetchedAt` (zasada 3: data pobrania ceny) i własny `deepLink` (zasada 2).
+- Testy: same typy, bez logiki — sprawdza je `pnpm typecheck`.
+
+**Zrobione**
+- `packages/providers/src/types.ts` jak w planie; typecheck przechodzi. Pakiet ma
+  `vitest run --passWithNoTests`, dopóki nie ma w nim logiki.
+
+**Decyzje**
+- Cena lotu zawsze **na osobę** (`pricePerPerson`) — to wejście `totalCost`. Jak adapter do niej
+  dochodzi (np. zapytanie dla 1 dorosłego albo dzielenie), zależy od dokumentacji providera.
+- `inbound` może być `null`: z tego, co wiem o Google Flights, szczegóły lotu powrotnego
+  wymagają osobnego zapytania — niepotwierdzone w dokumentacji, więc interfejs dopuszcza oba warianty.
+- Noclegi szukane po kodzie IATA celu; zamiana na miasto/obszar to sprawa adaptera.
+- Błędy providerów: adapter rzuca wyjątek, a ponowienia z backoffem robi pg-boss
+  (`retryLimit`/`retryBackoff` przy jobie) — bez własnej warstwy retry.

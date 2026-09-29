@@ -14,7 +14,7 @@
 - [x] `core/limits.ts` — budżet zapytań na watch/dzień
 
 ## M2 — pierwszy provider
-- [ ] interfejsy w `providers/src/types.ts`
+- [x] interfejsy w `providers/src/types.ts`
 - [ ] adapter SerpAPI Google Flights + fixture'y JSON do testów (bez sieci w testach)
 - [ ] cache odpowiedzi (tabela lub in-memory TTL 6h)
 - [ ] adapter SerpAPI Google Hotels
