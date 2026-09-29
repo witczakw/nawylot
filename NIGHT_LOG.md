@@ -145,3 +145,25 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 **Decyzje**
 - Kwoty ujemne dozwolone (różnica względem budżetu), ale zawsze całkowite i „bezpieczne” (`Number.isSafeInteger`).
 - Brak przeliczania walut — mieszanie walut to błąd programisty, nie przypadek do obsłużenia.
+
+---
+
+## M1.2 — `core/totalCost.ts`: lot × pax + nocleg × noce + szacunek bagażu
+
+**Plan**
+- `totalCost({ flightPerPerson, pax, stayPerNight, nights, baggagePerPerson })` →
+  rozbicie `{ flight, stay, baggage, total, perPerson }` (karta okazji pokazuje rozbicie pod kwotą).
+- Testy: 1 os. / 2 os., bagaż 0 zł, kwota na osobę przy nieparzystej sumie, walidacja pax/nocy, waluty.
+
+**Zrobione**
+- `totalCost` jak w planie, 5 testów (w tym 3 osoby i nieparzysta suma).
+
+**Decyzje**
+- Bagaż liczony **na osobę** (× pax) — każdy pasażer płaci za swój bagaż. W TASKS.md wzór
+  nie mówi tego wprost.
+- `stayPerNight` to cena za noc dla całej grupy (nie na osobę), zgodnie ze wzorem „nocleg × noce”.
+- `perPerson` zaokrąglane w górę do grosza (tylko do wyświetlania; decyzje budżetowe
+  porównują sumy bez dzielenia).
+
+**Do sprawdzenia ręcznie**
+- Czy bagaż ma być na osobę, czy jeden szacunek na cały wyjazd.
