@@ -26,6 +26,7 @@ pnpm install
 cp .env.example .env        # uzupełnij klucze
 docker compose up -d db     # lokalny Postgres
 pnpm db:migrate
+pnpm db:seed                # opcjonalnie: użytkownik testowy i 3 watche POZ → dowolnie
 pnpm dev                    # web + worker
 ```
 

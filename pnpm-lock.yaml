@@ -39,7 +39,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       '@nawylot/notifications':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/notifications
       '@nawylot/providers':
         specifier: workspace:*
@@ -74,6 +74,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
 
   packages/notifications:
     dependencies:

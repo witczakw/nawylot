@@ -11,7 +11,8 @@
     "migrate": "drizzle-kit migrate",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed": "tsx src/runSeed.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.3",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15"
   }
 }

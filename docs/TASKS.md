@@ -24,7 +24,7 @@
 - [x] zapis price_history
 - [ ] `packages/notifications`: interfejs kanału + TelegramChannel
 - [x] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
-- [ ] seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
+- [x] seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
 
 ## M4 — web
 - [ ] podpiąć `src/styles/tokens.css`, Tailwind v4, font Overpass; strona `/design` z próbkami kolorów i kartą okazji

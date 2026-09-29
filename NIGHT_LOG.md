@@ -478,3 +478,30 @@ Zadanie M3.3 zostaje **nieodhaczone** w TASKS.md (interfejs jest, kanału nie ma
 - **Job NIE jest zarejestrowany w `main.ts`** — czeka na kanał (BLOKADA M3.3) i adaptery.
 - Czy alert odłożony przez quiet hours nie powinien przepadać, jeśli oferta ma > 12 h.
 - Teksty alertu (tytuł, „mieści się w budżecie”, „Za 2 os.: …”) — przeczytajcie na głos.
+
+---
+
+## M3.5 — seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
+
+**Plan**
+- `packages/db/src/seed.ts`: użytkownik testowy (strefa Europe/Warsaw, Telegram włączony,
+  quiet hours 22:00–07:00) i 3 watche POZ → dowolnie, najbliższy październik, 2–3 noce,
+  1000 zł/os. Stałe UUID + upsert, więc ponowne uruchomienie nie dubluje danych.
+- `pnpm db:seed` (tsx), blokada uruchomienia przy `NODE_ENV=production`.
+- Testy: wybór października, seed na bazie testowej, idempotencja.
+
+**Zrobione**
+- `seed.ts` + `runSeed.ts`, skrypt `pnpm db:seed`, wpis w README. 5 testów (3 jednostkowe
+  wyboru października, 2 na Postgresie). Sprawdzone ręcznie na bazie `nawylot`: dwa
+  uruchomienia = 1 użytkownik, 3 watche; `NODE_ENV=production` przerywa seed.
+
+**Decyzje**
+- 3 watche różnią się tylko liczbą osób (1, 2, 4) — TASKS.md podaje jedną specyfikację dla
+  wszystkich trzech, a różne `pax` pokazują liczenie kosztu na osobę.
+- Październik = najbliższy, który się nie skończył (dziś: 2026). Ponowny seed przesuwa daty,
+  włącza watche i zeruje `last_scanned_at`.
+- Użytkownik testowy nie ma `telegram_links` — `chat_id` pojawi się po połączeniu konta (M4).
+- tsx jako devDependency `packages/db` (to samo narzędzie co w workerze).
+
+**Do sprawdzenia ręcznie**
+- Watche „dowolnie” wymagają providera, który obsługuje brak celu (patrz BLOKADA M2.2).
