@@ -1,0 +1,16 @@
+{
+  "name": "nawylot",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @nawylot/db generate",
+    "db:migrate": "pnpm --filter @nawylot/db migrate"
+  }
+}

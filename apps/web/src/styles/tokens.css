@@ -1,0 +1,72 @@
+/* Tokeny designu — źródło prawdy. Opis i uzasadnienie: docs/DESIGN.md
+   Tailwind v4: wartości z @theme są dostępne jako klasy (bg-horyzont, text-ink, ...). */
+
+@import url("https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap");
+
+@theme {
+  --color-horyzont: #EEF3F7;
+  --color-chmura: #FFFFFF;
+  --color-ink: #13233F;
+  --color-mgla: #5B6B82;
+  --color-kobalt: #1F3FA6;
+  --color-sygnal: #F5B700;
+  --color-morze: #0B7A75;
+  --color-koral: #B53A28;
+
+  --font-sans: "Overpass", "Segoe UI", system-ui, sans-serif;
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.563rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+  --text-4xl: 3.052rem;
+
+  --radius-control: 4px;
+  --radius-offer: 12px;
+}
+
+/* Motyw „lot nocny” */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-horyzont: #0E1A30;
+    --color-chmura: #16264A;
+    --color-ink: #E6EDF5;
+    --color-mgla: #9AA9BF;
+    --color-kobalt: #8FA8F0;
+    --color-morze: #3FB8AF;
+    --color-koral: #F07A6A;
+  }
+}
+:root[data-theme="dark"] {
+  --color-horyzont: #0E1A30;
+  --color-chmura: #16264A;
+  --color-ink: #E6EDF5;
+  --color-mgla: #9AA9BF;
+  --color-kobalt: #8FA8F0;
+  --color-morze: #3FB8AF;
+  --color-koral: #F07A6A;
+}
+
+body {
+  background: var(--color-horyzont);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.nums { font-variant-numeric: tabular-nums; }
+
+/* Karta okazji zawsze granatowa, niezależnie od motywu */
+.offer {
+  --offer-bg: #13233F;
+  --offer-fg: #EEF3F7;
+  background: var(--offer-bg);
+  color: var(--offer-fg);
+  border-radius: var(--radius-offer);
+}
+.offer .price { color: var(--color-sygnal); font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
