@@ -430,3 +430,51 @@ i `ResponseParameters` (`retry_after` przy 429) oraz jednej nagranej odpowiedzi
 `sendMessage` (sukces + błąd 403 „bot was blocked by the user”) jako fixture.
 
 Zadanie M3.3 zostaje **nieodhaczone** w TASKS.md (interfejs jest, kanału nie ma).
+
+---
+
+## M3.4 — job `notify`: dispatch po preferencjach, quiet hours, deduplikacja przez alerts_sent
+
+**Plan**
+- core (czyste funkcje + testy):
+  - `format.ts`: `formatMoney` („1 186 zł”), `formatTripDates` („16–18.10”),
+    `formatFetchedAt` („29.09, 21:40” w strefie użytkownika).
+  - `alertMessage.ts`: `buildAlertMessage` — pierwsze słowa trasa i cena (ANTI_SLOP),
+    rozbicie kosztu, „Cena z … · może się zmienić” (zasada 3), dwa osobne linki.
+  - `alertPolicy.ts`: `isDeal` (mieści się w budżecie i score ≥ próg), `offerFingerprint`
+    (trasa + daty), `decideDelivery` (duplikat → pomiń, limit dzienny → pomiń, quiet hours →
+    odłóż do ich końca, inaczej wyślij).
+- worker `jobs/notify.ts`: `notifyOffer(deps, offerId, channel?)` — oferta + watch + użytkownik,
+  włączone kanały z `notification_prefs`, decyzja z core, `channel.send`, zapis `alerts_sent`.
+  Kolejka `notify` z polityką `singleton` per watch (jedno powiadomienie watcha naraz, żeby
+  deduplikacja nie miała wyścigu). Odłożone przez quiet hours → nowy job ze `startAfter`.
+- `scan-watch`: po zapisie ofert wrzuca `notify` dla ofert, które są okazją (`isDeal`).
+- Testy: core jednostkowo; `notifyOffer` na Postgresie z kanałem podstawionym w teście.
+
+**Zrobione**
+- core: `format.ts` (9 testów), `alertMessage.ts` z `buildAlertMessage` (8), `alertPolicy.ts`
+  z `isDeal`, `offerFingerprint`, `quietHoursRemaining`, `decideDelivery` (18).
+- worker: `jobs/notify.ts` — `notifyOffer`, kolejka `notify` (`singleton` per watch, retry
+  z backoffem), odkładanie przez quiet hours jako nowy job ze `startAfter` tylko dla tego kanału.
+  11 testów na Postgresie (w tym 2 przez pg-boss).
+- `scan-watch` zwraca `dealOfferIds` i wrzuca dla nich `notify`; id ofert generowane w kodzie
+  (`randomUUID`), żeby nie polegać na kolejności `RETURNING`.
+
+**Decyzje (wartości do potwierdzenia przez zespół)**
+- `MIN_DEAL_SCORE = 0`: alert, gdy wyjazd mieści się w budżecie i cena lotu nie jest wyższa niż
+  mediana trasy. Nowe trasy (brak historii → score 0) też dostają alert — inaczej przez pierwsze
+  tygodnie nikt nie dostałby nic.
+- `MAX_ALERTS_PER_USER_PER_DAY = 3` na kanał, okno kroczące 24 h (bez liczenia dni w strefie).
+- Duplikat = ten sam wyjazd (trasa + daty, bez godzin i hotelu) tym samym kanałem; ponownie
+  wysyłamy dopiero przy spadku ceny o ≥ 5% względem ostatniego alertu.
+- Kolejność: duplikat → limit → quiet hours. Alert w quiet hours czeka do ich końca (a nie
+  przepada); po czasie pokazuje starą datę pobrania z dopiskiem „może się zmienić”.
+- Treść: tytuł „POZ → BCN, 16–18.10: 1 186 zł/os. (314 zł poniżej budżetu)”, w treści rozbicie
+  kosztu i „Cena z 29.09, 21:40 · może się zmienić” w strefie użytkownika. Linki do lotu
+  i noclegu osobno w `links` — kanał sam je pokaże (np. dwa przyciski).
+- zod 4 w workerze do odczytu `flight_json` / `stay_json` z bazy (kolumny jsonb są bez typu).
+
+**Do sprawdzenia ręcznie**
+- **Job NIE jest zarejestrowany w `main.ts`** — czeka na kanał (BLOKADA M3.3) i adaptery.
+- Czy alert odłożony przez quiet hours nie powinien przepadać, jeśli oferta ma > 12 h.
+- Teksty alertu (tytuł, „mieści się w budżecie”, „Za 2 os.: …”) — przeczytajcie na głos.

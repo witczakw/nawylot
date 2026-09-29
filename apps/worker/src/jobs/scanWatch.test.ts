@@ -91,7 +91,7 @@ function fakeProviders(flightOffers: FlightOffer[], stayOffers: StayOffer[]) {
 describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
   let db: Db
   let userId: string
-  const routeKeys = ['POZ-BCN', 'POZ-OPO', 'POZ-NAP', 'POZ-TIA', 'POZ-FAO', 'POZ-SVQ']
+  const routeKeys = ['POZ-BCN', 'POZ-OPO', 'POZ-NAP', 'POZ-TIA', 'POZ-FAO', 'POZ-SVQ', 'POZ-KEF']
   const log = createLogger(() => undefined)
 
   async function insertWatch(values: Partial<typeof watches.$inferInsert> = {}) {
@@ -155,7 +155,12 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
 
     const result = await scanWatch(deps(providers), watch.id)
 
-    expect(result).toEqual({ flightQueries: 1, flightsFound: 3, offersSaved: 2, pricesRecorded: 1 })
+    expect(result).toMatchObject({
+      flightQueries: 1,
+      flightsFound: 3,
+      offersSaved: 2,
+      pricesRecorded: 1,
+    })
     expect(providers.flightSearches).toEqual([
       {
         origin: 'POZ',
@@ -187,8 +192,25 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
     })
     expect(saved[1]?.fetchedAt).toEqual(FLIGHTS_FETCHED_AT)
 
+    // Obie oferty mieszczą się w budżecie 2 × 1500 zł i mają neutralny score → okazje.
+    expect([...result.dealOfferIds].sort()).toEqual(saved.map((o) => o.id).sort())
+
     const [scanned] = await db.select().from(watches).where(eq(watches.id, watch.id))
     expect(scanned?.lastScannedAt).toEqual(NOW)
+  })
+
+  it('oferta ponad budżet trafia do offers, ale nie jest okazją do alertu', async () => {
+    const watch = await insertWatch({ destinations: ['KEF'], pax: 1, budgetMinor: 100_000 })
+    const providers = fakeProviders(
+      [flight('KEF', 890, '2026-10-16T11:00')],
+      [stay('Reykjavik Loft', 700)],
+    )
+
+    const result = await scanWatch(deps(providers), watch.id)
+
+    // 890 + 2 × 700 = 2290 zł przy budżecie 1000 zł
+    expect(result.offersSaved).toBe(1)
+    expect(result.dealOfferIds).toEqual([])
   })
 
   it('liczy score względem mediany cen trasy z ostatnich 90 dni w tej samej walucie', async () => {

@@ -23,7 +23,7 @@
 - [x] job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
 - [x] zapis price_history
 - [ ] `packages/notifications`: interfejs kanału + TelegramChannel
-- [ ] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
+- [x] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
 - [ ] seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
 
 ## M4 — web

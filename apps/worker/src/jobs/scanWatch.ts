@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import {
   BAGGAGE_ESTIMATE_PER_PERSON_MINOR,
   DEFAULT_SCAN_INTERVAL_MINUTES,
@@ -5,6 +6,7 @@ import {
   cheapest,
   cheapestDistinct,
   expandWatch,
+  isDeal,
   isScanDue,
   money,
   routeKey,
@@ -20,6 +22,7 @@ import type { FlightOffer, FlightProvider, StayProvider } from '@nawylot/provide
 import { and, eq, gte } from 'drizzle-orm'
 import type PgBoss from 'pg-boss'
 import type { Logger } from '../logger'
+import { createNotifyQueue, enqueueNotify } from './notify'
 
 export const SCAN_WATCH_QUEUE = 'scan-watch'
 export const SCHEDULE_SCANS_QUEUE = 'schedule-scans'
@@ -40,6 +43,8 @@ export interface ScanResult {
   flightsFound: number
   offersSaved: number
   pricesRecorded: number
+  // Oferty, które mieszczą się w budżecie i mają score ≥ progu — idą do joba notify.
+  dealOfferIds: string[]
 }
 
 export async function scanWatch(deps: ScanDeps, watchId: string): Promise<ScanResult> {
@@ -50,6 +55,7 @@ export async function scanWatch(deps: ScanDeps, watchId: string): Promise<ScanRe
     flightsFound: 0,
     offersSaved: 0,
     pricesRecorded: 0,
+    dealOfferIds: [],
   }
 
   const [watch] = await db.select().from(watches).where(eq(watches.id, watchId))
@@ -140,7 +146,13 @@ export async function scanWatch(deps: ScanDeps, watchId: string): Promise<ScanRe
       history.map((row) => money(row.priceMinor, row.currency)),
     )
 
+    const offerId = randomUUID()
+    const budgetPerPerson = money(watch.budgetMinor, watch.currency)
+    if (isDeal({ total: cost.total, pax: watch.pax, budgetPerPerson, score })) {
+      result.dealOfferIds.push(offerId)
+    }
     newOffers.push({
+      id: offerId,
       watchId: watch.id,
       flightJson: flight,
       stayJson: stay,
@@ -209,8 +221,13 @@ export async function registerScanWatch(boss: PgBoss, deps: ScanDeps): Promise<v
     retryDelay: 60,
     retryBackoff: true,
   })
+  await createNotifyQueue(boss)
   await boss.work(SCAN_WATCH_QUEUE, async (jobs) => {
-    for (const job of jobs) await scanWatch(deps, watchIdFrom(job.data))
+    for (const job of jobs) {
+      const watchId = watchIdFrom(job.data)
+      const { dealOfferIds } = await scanWatch(deps, watchId)
+      for (const offerId of dealOfferIds) await enqueueNotify(boss, { offerId, watchId })
+    }
   })
 
   await boss.createQueue(SCHEDULE_SCANS_QUEUE)

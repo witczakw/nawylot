@@ -15,8 +15,8 @@ boss.on('error', (err) => log.error('pg-boss error', { err }))
 
 await boss.start()
 await registerHeartbeat(boss, log)
-// scan-watch (jobs/scanWatch.ts) wymaga adapterów lotów i noclegów — rejestracja tutaj, gdy
-// powstaną (BLOKADA M2.2 / M2.4 w NIGHT_LOG.md).
+// scan-watch (jobs/scanWatch.ts) i notify (jobs/notify.ts) potrzebują adapterów lotów i noclegów
+// oraz kanału powiadomień — rejestracja tutaj, gdy powstaną (BLOKADY M2.2, M2.4, M3.3 w NIGHT_LOG.md).
 log.info('worker started')
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

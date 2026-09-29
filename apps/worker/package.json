@@ -12,9 +12,11 @@
   "dependencies": {
     "@nawylot/core": "workspace:*",
     "@nawylot/db": "workspace:*",
+    "@nawylot/notifications": "workspace:*",
     "@nawylot/providers": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "pg-boss": "^10.4.2",
-    "tsx": "^4.23.15"
+    "tsx": "^4.23.15",
+    "zod": "^4.6.5"
   }
 }
