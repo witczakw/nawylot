@@ -1,0 +1,16 @@
+{
+  "name": "@nawylot/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "pg-boss": "^10.4.2",
+    "tsx": "^4.23.15"
+  }
+}

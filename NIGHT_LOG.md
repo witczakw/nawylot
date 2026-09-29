@@ -77,3 +77,29 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 - Czy `users` ma już mieć e-mail / dane logowania — nie ma tego w szkicu, więc nie dodawałem.
 - Czy PRD-owe „preferowane dni (pt–nd)” i „minimalny standard noclegu” mają trafić do `watches`
   (szkic w ARCHITECTURE.md ich nie ma).
+
+---
+
+## M0.3 — `apps/worker` z pg-boss: job `heartbeat` co minutę, logowanie
+
+**Plan**
+- `apps/worker/src/main.ts` — start pg-boss, rejestracja jobów, łagodne zatrzymanie (SIGINT/SIGTERM).
+- `src/jobs/heartbeat.ts` — kolejka `heartbeat`, cron `* * * * *`, handler loguje id joba.
+- `src/logger.ts` — logger JSON (jedna linia na wpis), bo ANTI_SLOP zakazuje `console.log`.
+- Testy: logger (jednostkowe), heartbeat na prawdziwym pg-boss (`TEST_DATABASE_URL`, schemat `pgboss_test`).
+
+**Zrobione**
+- Worker jak w planie; `pnpm dev` (tsx watch) i `pnpm --filter @nawylot/worker start`.
+- Sprawdzone ręcznie na bazie `nawylot`: `worker started` → po minucie `heartbeat` z crona
+  → SIGTERM → `worker stopping` / `worker stopped`.
+- Testy: 3 jednostkowe loggera + 2 integracyjne (harmonogram co minutę, przetworzenie joba).
+
+**Decyzje**
+- pg-boss 10 (gałąź maint-v10), bo pg-boss 11+ wymaga Node ≥ 22, a CLAUDE.md mówi Node 20+.
+  API v10: `createQueue` przed `schedule`/`work`, handler dostaje tablicę jobów.
+- Własny logger (~20 linii) zamiast pino — ANTI_SLOP: bez zależności do rzeczy na kilka linijek.
+  Pola `time`/`level`/`msg` nie mogą zostać nadpisane przez przekazane pola; `Error` jest serializowany.
+- Worker wczytuje `.env` z katalogu głównego tylko, gdy `DATABASE_URL` nie jest ustawiony.
+
+**Do sprawdzenia ręcznie**
+- `pnpm dev` z katalogu głównego (web jeszcze nie istnieje, więc startuje tylko worker).
