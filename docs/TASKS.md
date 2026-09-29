@@ -4,7 +4,7 @@
 - [x] pnpm workspace, tsconfig bazowy (strict), eslint, prettier, vitest
 - [x] docker-compose z Postgresem, `packages/db` z Drizzle + pierwsza migracja (tabele z ARCHITECTURE.md)
 - [x] `apps/worker` z pg-boss: job `heartbeat` co minutę, logowanie
-- [ ] CI (GitHub Actions): typecheck + test + lint
+- [x] CI (GitHub Actions): typecheck + test + lint
 
 ## M1 — rdzeń domeny (bez sieci)
 - [ ] `core/money.ts` — typ Money (minor units + waluta), dodawanie, porównania, testy

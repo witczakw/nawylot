@@ -103,3 +103,27 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 
 **Do sprawdzenia ręcznie**
 - `pnpm dev` z katalogu głównego (web jeszcze nie istnieje, więc startuje tylko worker).
+
+---
+
+## M0.4 — CI (GitHub Actions): typecheck + test + lint
+
+**Plan**
+- `.github/workflows/ci.yml`: push na main + pull_request; Postgres 16 jako service,
+  `TEST_DATABASE_URL`, żeby testy integracyjne nie były w CI pomijane.
+- Kroki: `pnpm install --frozen-lockfile`, `typecheck`, `lint`, `format:check`, `test`.
+
+**Zrobione**
+- Workflow jak w planie. Wersje akcji z README oficjalnych repozytoriów:
+  `actions/checkout@v6`, `pnpm/action-setup@v6` (wersja pnpm z `packageManager`),
+  `actions/setup-node@v7` z `cache: pnpm`.
+- Node 20 w CI (minimum z CLAUDE.md). Lokalnie przepuściłem test/typecheck/lint na Node 20.20
+  (`npx -p node@20`) — przechodzi.
+
+**Decyzje**
+- Dodatkowo `format:check`, żeby formatowanie nie rozjeżdżało się między osobami.
+- CI nie odpala się na push do innych gałęzi niż main (żeby nie dublować z pull_request).
+
+**Do sprawdzenia ręcznie**
+- Pierwsze uruchomienie workflow na GitHubie — lokalnie nie da się go wykonać. Ruszy po
+  otwarciu PR z `nocna-zmiana`.
