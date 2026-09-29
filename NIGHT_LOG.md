@@ -271,3 +271,21 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 - Noclegi szukane po kodzie IATA celu; zamiana na miasto/obszar to sprawa adaptera.
 - Błędy providerów: adapter rzuca wyjątek, a ponowienia z backoffem robi pg-boss
   (`retryLimit`/`retryBackoff` przy jobie) — bez własnej warstwy retry.
+
+---
+
+## M2.2 — adapter SerpAPI Google Flights + fixture'y JSON
+
+BLOKADA: adapter SerpAPI Google Flights — nie mogę potwierdzić kształtu odpowiedzi API
+w dokumentacji: serpapi.com (i serpapi-python.readthedocs.io) są zablokowane przez politykę
+sieci tej sesji, a jedyny dostępny opis (README repo `serpapi/google-flights-scraper`, tylko
+w streszczeniu) nie mówi m.in., czy `price` jest za osobę czy za wszystkich pasażerów, ani jak
+działa lot powrotny (`departure_token`) i „dowolny kierunek” — potrzebuję od zespołu:
+1. nagranej odpowiedzi JSON z SerpAPI (`engine=google_flights`, lot w obie strony, np.
+   POZ→BCN, 1 i 2 dorosłych, `currency=PLN`) do `packages/providers/fixtures/`, albo
+   dostępu do serpapi.com w kolejnej sesji;
+2. decyzji, jak obsłużyć watch „dowolnie” (Google Flights wymaga `arrival_id`; SerpAPI ma
+   podobno osobny silnik do eksploracji kierunków — do potwierdzenia) — seed z M3 to właśnie
+   „POZ → dowolnie”.
+
+Żaden kod adaptera nie został dodany (zgodnie z zasadą „nie zgaduj”).
