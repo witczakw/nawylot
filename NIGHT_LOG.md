@@ -189,3 +189,30 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 **Do sprawdzenia ręcznie**
 - Próg score dla alertu (PRD: „score > próg”) — przy braku historii score = 0, więc próg > 0
   zablokowałby alerty dla nowych tras. Ustawiam go dopiero w M3 i opisuję tam.
+
+---
+
+## M1.4 — `core/expandWatch.ts`: rozwinięcie watcha w listę zapytań z limitem
+
+**Plan**
+- `src/dates.ts`: daty kalendarzowe `YYYY-MM-DD` (jak kolumny `date`), `addDays`, `daysBetween`,
+  arytmetyka w UTC (zmiana czasu 25.10 nie przesuwa dat).
+- `src/expandWatch.ts`: `expandWatch(watch, { today, limit, scanIndex })` →
+  `{ queries, total }`. Kombinacje: data wylotu × liczba nocy × lotnisko wylotu × cel
+  (`null` = dowolnie); powrót nie później niż `dateTo`, wylot nie wcześniej niż `today`.
+- Limit: kolejne skany (`scanIndex`) biorą kolejne okna listy z zawinięciem, żeby przy małym
+  budżecie po kilku skanach pokryć całe okno dat, a nie w kółko pierwsze dni.
+- Testy: październik 2–3 noce (57 zapytań), daty w przeszłości, okno krótsze niż noce,
+  wiele lotnisk, rotacja i zawinięcie, przełom miesiąca, zmiana czasu, rok przestępny.
+
+**Zrobione**
+- `dates.ts` (6 testów) i `expandWatch.ts` (10 testów) jak w planie.
+
+**Decyzje**
+- Zakres dat watcha obejmuje cały wyjazd: wylot ≥ `dateFrom` i ≥ `today`, powrót ≤ `dateTo`.
+- Kolejność zapytań: data wylotu → liczba nocy → lotnisko wylotu → cel (deterministyczna,
+  potrzebna do rotacji między skanami).
+- Rotacja zamiast losowania, bo `core` jest czyste i deterministyczne; worker poda `scanIndex`.
+- Jedno zapytanie = jedno lotnisko wylotu i jeden cel. Łączenie lotnisk w jednym zapytaniu
+  (mniej zapytań) do rozważenia, gdy będzie potwierdzone w dokumentacji providera.
+- Preferowane dni tygodnia z PRD pominięte (nie ma ich w schemacie `watches`).
