@@ -11,7 +11,7 @@
 - [x] `core/totalCost.ts` — lot × pax + nocleg × noce + szacunek bagażu, testy
 - [x] `core/scoreDeal.ts` — score względem mediany z price_history (brak historii → neutralny), testy
 - [x] `core/expandWatch.ts` — rozwinięcie watcha w listę zapytań (daty × długości × lotniska) z limitem, testy
-- [ ] `core/limits.ts` — budżet zapytań na watch/dzień
+- [x] `core/limits.ts` — budżet zapytań na watch/dzień
 
 ## M2 — pierwszy provider
 - [ ] interfejsy w `providers/src/types.ts`

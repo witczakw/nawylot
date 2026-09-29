@@ -216,3 +216,33 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 - Jedno zapytanie = jedno lotnisko wylotu i jeden cel. Łączenie lotnisk w jednym zapytaniu
   (mniej zapytań) do rozważenia, gdy będzie potwierdzone w dokumentacji providera.
 - Preferowane dni tygodnia z PRD pominięte (nie ma ich w schemacie `watches`).
+
+---
+
+## M1.5 — `core/limits.ts`: budżet zapytań na watch/dzień
+
+**Plan**
+- `DAILY_QUERY_BUDGET_PER_WATCH`, `MAX_STAY_QUERIES_PER_SCAN` (top-N lotów, dla których szukamy
+  noclegu), `DEFAULT_SCAN_INTERVAL_MINUTES` (plan „Na próbę”: co 24 h z BILLING.md).
+- `scanBudget(interval, dailyBudget)` → `{ flightQueries, stayQueries }` na jeden skan, tak żeby
+  skany × zapytania na skan ≤ budżet dzienny.
+- `isScanDue(lastScannedAt, now, interval)` — dobowy budżet trzyma się dzięki
+  `watches.last_scanned_at` (bez dodatkowej tabeli liczników).
+- `scanIndex(now, interval)` — numer skanu dla rotacji w `expandWatch`.
+- Testy: co 24 h / 3 h / 5 h, za mały budżet, suma na dobę ≤ budżet, due/not due, kolejne indeksy.
+
+**Zrobione**
+- `limits.ts` jak w planie, 12 testów.
+
+**Decyzje**
+- `DAILY_QUERY_BUDGET_PER_WATCH = 24`, `MAX_STAY_QUERIES_PER_SCAN = 3` — wartości robocze.
+  Przy planie „Na próbę” (co 24 h) daje to 21 zapytań o loty + 3 o noclegi na skan; październik
+  2–3 noce (57 kombinacji) jest pokryty w 3 dni dzięki rotacji z `expandWatch`.
+- Budżet egzekwowany przez interwał skanów + `last_scanned_at`, nie przez licznik w bazie.
+- Zbyt mały budżet na dany interwał to błąd (`RangeError`), a nie cichy skan bez noclegów.
+
+**Do sprawdzenia ręcznie**
+- **Do decyzji zespołu:** wartość budżetu dziennego. Wzór z BILLING.md:
+  `koszt_watcha_mies = zapytania_na_skan × skany_na_dobę × 30 × koszt_zapytania`; przy 24
+  zapytaniach/dobę to 720 zapytań/mies. na watch. Cennika SerpAPI nie mogłem sprawdzić
+  (serpapi.com zablokowane w tej sesji).
