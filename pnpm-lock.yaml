@@ -32,6 +32,18 @@ importers:
 
   apps/worker:
     dependencies:
+      '@nawylot/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@nawylot/db':
+        specifier: workspace:^
+        version: link:../../packages/db
+      '@nawylot/providers':
+        specifier: workspace:^
+        version: link:../../packages/providers
+      drizzle-orm:
+        specifier: ^0.45.3
+        version: 0.45.3(@types/pg@8.23.1)(pg@8.23.0)
       pg-boss:
         specifier: ^10.4.2
         version: 10.4.2

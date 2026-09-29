@@ -1,5 +1,9 @@
 import { add, money, multiply, type Money } from './money'
 
+// Szacunek dopłaty za bagaż na osobę w jednostkach minor waluty watcha. 0 = lecimy z tym,
+// co jest w cenie biletu (bagaż podręczny) — typowe przy wyjazdach na 2–5 dni.
+export const BAGGAGE_ESTIMATE_PER_PERSON_MINOR = 0
+
 export interface TotalCostInput {
   // Cena lotu w obie strony dla jednej osoby.
   flightPerPerson: Money

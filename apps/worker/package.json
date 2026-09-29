@@ -10,6 +10,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@nawylot/core": "workspace:*",
+    "@nawylot/db": "workspace:*",
+    "@nawylot/providers": "workspace:*",
+    "drizzle-orm": "^0.45.3",
     "pg-boss": "^10.4.2",
     "tsx": "^4.23.15"
   }

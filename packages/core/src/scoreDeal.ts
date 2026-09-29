@@ -1,6 +1,8 @@
 import { assertSameCurrency, type Money } from './money'
 
 export const NEUTRAL_SCORE = 0
+// Z jakiego okresu bierzemy historię cen trasy do mediany.
+export const HISTORY_WINDOW_DAYS = 90
 // Mediana z mniejszej liczby cen jest przypadkowa, więc wtedy nie oceniamy okazji.
 export const MIN_HISTORY_SAMPLES = 5
 
@@ -21,4 +23,9 @@ export function scoreDeal(price: Money, history: readonly Money[]): number {
   if (typical <= 0) return NEUTRAL_SCORE
 
   return Math.round(((typical - price.amountMinor) / typical) * 100)
+}
+
+// Klucz trasy w price_history, np. 'POZ-BCN'. Kierunek ma znaczenie.
+export function routeKey(origin: string, destination: string): string {
+  return `${origin}-${destination}`
 }

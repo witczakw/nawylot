@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, daysBetween } from './dates'
+import { addDays, daysBetween, toIsoDate } from './dates'
 
 describe('addDays', () => {
   it('przechodzi przez koniec miesiąca', () => {
@@ -23,11 +23,17 @@ describe('addDays', () => {
 })
 
 describe('daysBetween', () => {
-  it('pt 17.10 – nd 19.10 to 2 noce', () => {
-    expect(daysBetween('2026-10-17', '2026-10-19')).toBe(2)
+  it('pt 16.10 – nd 18.10 to 2 noce', () => {
+    expect(daysBetween('2026-10-16', '2026-10-18')).toBe(2)
   })
 
   it('jest ujemne, gdy druga data jest wcześniejsza', () => {
     expect(daysBetween('2026-10-19', '2026-10-17')).toBe(-2)
+  })
+})
+
+describe('toIsoDate', () => {
+  it('bierze dzień w UTC: 00:30 czasu polskiego 18.10 to wciąż 17.10', () => {
+    expect(toIsoDate(new Date('2026-10-17T22:30:00Z'))).toBe('2026-10-17')
   })
 })

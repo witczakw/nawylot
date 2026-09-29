@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { money } from './money'
-import { MIN_HISTORY_SAMPLES, NEUTRAL_SCORE, scoreDeal } from './scoreDeal'
+import { MIN_HISTORY_SAMPLES, NEUTRAL_SCORE, routeKey, scoreDeal } from './scoreDeal'
 
 const pln = (zl: number) => money(zl * 100, 'PLN')
 const history = (...zl: number[]) => zl.map(pln)
@@ -51,5 +51,12 @@ describe('scoreDeal', () => {
     const eurHistory = [100, 110, 120, 130, 140].map((eur) => money(eur * 100, 'EUR'))
 
     expect(() => scoreDeal(pln(400), eurHistory)).toThrow(/PLN i EUR/)
+  })
+})
+
+describe('routeKey', () => {
+  it('rozróżnia kierunek trasy', () => {
+    expect(routeKey('POZ', 'BCN')).toBe('POZ-BCN')
+    expect(routeKey('BCN', 'POZ')).not.toBe(routeKey('POZ', 'BCN'))
   })
 })

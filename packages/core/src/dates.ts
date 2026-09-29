@@ -22,3 +22,8 @@ export function addDays(date: string, days: number): string {
 export function daysBetween(from: string, to: string): number {
   return toEpochDay(to) - toEpochDay(from)
 }
+
+// Dzień kalendarzowy w UTC dla znacznika czasu.
+export function toIsoDate(instant: Date): string {
+  return instant.toISOString().slice(0, 10)
+}

@@ -327,3 +327,49 @@ potrzebuję od zespołu: nagranej odpowiedzi JSON (`engine=google_hotels`, np. B
 serpapi.com; oraz decyzji, skąd brać nazwę miejsca dla kodu IATA celu (stała tabela lotnisk?).
 
 Żaden kod adaptera nie został dodany.
+
+---
+
+## M3.1 — job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
+
+**Plan**
+- `core`: `stayWindow` (nocleg od dnia przylotu do dnia powrotu; przypadek „lot 23:50,
+  nocleg od następnego dnia”), `cheapest` / `cheapestDistinct` (top-N lotów o różnych oknach
+  noclegu), `routeKey`, `HISTORY_WINDOW_DAYS`, `toIsoDate`, `BAGGAGE_ESTIMATE_PER_PERSON_MINOR`.
+- `apps/worker/src/jobs/scanWatch.ts`: `scanWatch(deps, watchId)` — cała ścieżka z tytułu
+  zadania, zapis ofert i `last_scanned_at` w jednej transakcji; providery wstrzykiwane
+  (interfejsy z M2.1). Kolejka `scan-watch` z polityką `stately` (maks. jeden skan watcha naraz)
+  i retry z backoffem pg-boss.
+- `schedule-scans` (cron co 15 min): wybiera aktywne watche, którym minął interwał
+  (`isScanDue`), i wrzuca `scan-watch` z `singletonKey = watchId`.
+- Testy: core jednostkowo; `scanWatch` i wybór watchy na Postgresie z providerami
+  podstawionymi w teście.
+
+**Zrobione**
+- core: `stayWindow` (5 testów, w tym lot 23:50 → nocleg od dnia przylotu), `cheapest` /
+  `cheapestDistinct` (5), `routeKey`, `HISTORY_WINDOW_DAYS = 90`, `toIsoDate`,
+  `BAGGAGE_ESTIMATE_PER_PERSON_MINOR = 0`.
+- worker: `scanWatch`, `dueWatchIds`, `registerScanWatch` (kolejka `scan-watch` + cron
+  `schedule-scans` co 15 min). 7 testów na Postgresie, w tym przejście przez pg-boss.
+- Poprawka przy okazji: nazwy dni w dwóch testach dat (17.10.2026 to sobota, nie piątek).
+
+**Decyzje**
+- Top-N = najtańsze loty o **różnych oknach noclegu** (cel + zameldowanie + wymeldowanie),
+  żeby nie pytać N razy o ten sam nocleg.
+- Nocleg: najtańsza oferta providera. Minimalny standard noclegu z PRD nie istnieje jeszcze
+  w schemacie watcha, więc nie filtrujemy.
+- Score liczony dla ceny lotu na osobę względem mediany trasy (`price_history`: ta sama trasa,
+  ta sama waluta, ostatnie 90 dni).
+- `offers.fetched_at` = starsza z dat pobrania lotu i noclegu.
+- Zapisujemy wszystkie oferty z top-N (także ponad budżet) — przydadzą się w UI „ostatnie
+  okazje”; o alercie decyduje job `notify` (M3.4).
+- Błąd providera = błąd joba; pg-boss ponawia (3 razy, backoff od 60 s). Zapytania, które się
+  udały, wracają z cache (M2.3), więc ponowienie nie płaci drugi raz.
+- Szacunek bagażu = 0 zł (bilet z bagażem podręcznym) — wartość do decyzji zespołu.
+- `today` liczone w UTC.
+
+**Do sprawdzenia ręcznie**
+- **Job NIE jest zarejestrowany w `main.ts`** — nie ma jeszcze adapterów providerów
+  (BLOKADA M2.2/M2.4). Po ich dodaniu: `registerScanWatch(boss, { db, flights:
+  cachedFlightProvider(adapter), stays: cachedStayProvider(adapter), log, now: () => new Date() })`.
+- Szacunek bagażu (0 zł) i czy przy watchu „dowolnie” top-N nie powinno preferować różnych miast.

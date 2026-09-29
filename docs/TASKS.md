@@ -20,7 +20,7 @@
 - [ ] adapter SerpAPI Google Hotels
 
 ## M3 — pętla end-to-end
-- [ ] job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
+- [x] job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
 - [ ] zapis price_history
 - [ ] `packages/notifications`: interfejs kanału + TelegramChannel
 - [ ] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
