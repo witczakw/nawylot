@@ -127,3 +127,21 @@ Sesja autonomiczna, start 2026-09-29. Zakres: docs/TASKS.md, etapy M0–M3.
 **Do sprawdzenia ręcznie**
 - Pierwsze uruchomienie workflow na GitHubie — lokalnie nie da się go wykonać. Ruszy po
   otwarciu PR z `nocna-zmiana`.
+
+---
+
+## M1.1 — `core/money.ts`: typ Money, dodawanie, porównania
+
+**Plan**
+- `packages/core` (bez zależności, bez I/O): `package.json`, `tsconfig.json`, `src/index.ts`.
+- `src/money.ts`: `Money { amountMinor, currency }`, `money()` z walidacją (integer, ISO 4217),
+  `add`, `subtract`, `multiply` (przez liczbę całkowitą: osoby, noce), `compare`.
+  Operacje na różnych walutach rzucają błąd — nigdy nie przeliczamy po cichu.
+- `src/money.test.ts`: realne kwoty (412 zł + 774 zł), grosze, różne waluty, float jako kwota.
+
+**Zrobione**
+- `packages/core` + `money.ts` jak w planie, 13 testów.
+
+**Decyzje**
+- Kwoty ujemne dozwolone (różnica względem budżetu), ale zawsze całkowite i „bezpieczne” (`Number.isSafeInteger`).
+- Brak przeliczania walut — mieszanie walut to błąd programisty, nie przypadek do obsłużenia.

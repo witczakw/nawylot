@@ -7,7 +7,7 @@
 - [x] CI (GitHub Actions): typecheck + test + lint
 
 ## M1 — rdzeń domeny (bez sieci)
-- [ ] `core/money.ts` — typ Money (minor units + waluta), dodawanie, porównania, testy
+- [x] `core/money.ts` — typ Money (minor units + waluta), dodawanie, porównania, testy
 - [ ] `core/totalCost.ts` — lot × pax + nocleg × noce + szacunek bagażu, testy
 - [ ] `core/scoreDeal.ts` — score względem mediany z price_history (brak historii → neutralny), testy
 - [ ] `core/expandWatch.ts` — rozwinięcie watcha w listę zapytań (daty × długości × lotniska) z limitem, testy
