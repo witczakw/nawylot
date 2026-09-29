@@ -29,7 +29,7 @@ describe.skipIf(!testDatabaseUrl)('heartbeat na pg-boss (Postgres)', () => {
     )
   })
 
-  it('przetwarza job heartbeat i loguje jego id', async () => {
+  it('przetwarza job heartbeat i loguje jego id', { timeout: 15_000 }, async () => {
     const jobId = await boss.send(HEARTBEAT_QUEUE, {})
 
     await vi.waitFor(
@@ -37,7 +37,7 @@ describe.skipIf(!testDatabaseUrl)('heartbeat na pg-boss (Postgres)', () => {
         const logged = lines.map((line) => JSON.parse(line) as Record<string, unknown>)
         expect(logged).toContainEqual(expect.objectContaining({ msg: 'heartbeat', jobId }))
       },
-      { timeout: 10_000, interval: 200 },
+      { timeout: 8_000, interval: 200 },
     )
   })
 })

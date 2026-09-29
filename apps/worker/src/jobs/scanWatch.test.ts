@@ -346,28 +346,32 @@ describe.skipIf(!testDatabaseUrl)('scan-watch (Postgres)', () => {
     expect(due).not.toContain(inactive.id)
   })
 
-  it('job scan-watch w pg-boss wykonuje skan watcha z danych joba', async () => {
-    const watch = await insertWatch({ destinations: ['TIA'] })
-    const providers = fakeProviders(
-      [flight('TIA', 299, '2026-10-16T10:00')],
-      [stay('Tirana Inn', 150)],
-    )
-    const boss = new PgBoss({ connectionString: testDatabaseUrl, schema: 'pgboss_test_scan' })
-    boss.on('error', (err) => log.error('pg-boss error', { err }))
-    await boss.start()
-    try {
-      await registerScanWatch(boss, deps(providers))
-      await boss.send(SCAN_WATCH_QUEUE, { watchId: watch.id }, { singletonKey: watch.id })
-
-      await vi.waitFor(
-        async () => {
-          const saved = await db.select().from(offers).where(eq(offers.watchId, watch.id))
-          expect(saved).toHaveLength(1)
-        },
-        { timeout: 10_000, interval: 200 },
+  it(
+    'job scan-watch w pg-boss wykonuje skan watcha z danych joba',
+    { timeout: 15_000 },
+    async () => {
+      const watch = await insertWatch({ destinations: ['TIA'] })
+      const providers = fakeProviders(
+        [flight('TIA', 299, '2026-10-16T10:00')],
+        [stay('Tirana Inn', 150)],
       )
-    } finally {
-      await boss.stop({ graceful: false })
-    }
-  })
+      const boss = new PgBoss({ connectionString: testDatabaseUrl, schema: 'pgboss_test_scan' })
+      boss.on('error', (err) => log.error('pg-boss error', { err }))
+      await boss.start()
+      try {
+        await registerScanWatch(boss, deps(providers))
+        await boss.send(SCAN_WATCH_QUEUE, { watchId: watch.id }, { singletonKey: watch.id })
+
+        await vi.waitFor(
+          async () => {
+            const saved = await db.select().from(offers).where(eq(offers.watchId, watch.id))
+            expect(saved).toHaveLength(1)
+          },
+          { timeout: 8_000, interval: 200 },
+        )
+      } finally {
+        await boss.stop({ graceful: false })
+      }
+    },
+  )
 })
