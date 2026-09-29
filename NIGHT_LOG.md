@@ -505,3 +505,67 @@ Zadanie M3.3 zostaje **nieodhaczone** w TASKS.md (interfejs jest, kanału nie ma
 
 **Do sprawdzenia ręcznie**
 - Watche „dowolnie” wymagają providera, który obsługuje brak celu (patrz BLOKADA M2.2).
+
+---
+
+## PODSUMOWANIE NOCNEJ ZMIANY
+
+Stan: w M0–M3 nie zostało nic, co da się zrobić bez zespołu. Zrobione: 14 z 17 zadań.
+Nieodhaczone: M2.2, M2.4 (BLOKADY) i M3.3 (interfejs jest, TelegramChannel zablokowany).
+Na końcu: 144 testy przechodzą (z `TEST_DATABASE_URL`), `pnpm typecheck`, `pnpm lint`,
+`pnpm format:check`, `pnpm install --frozen-lockfile` — czysto.
+
+### Commity (gałąź `nocna-zmiana`, od najstarszego)
+1. `223ffa0` chore: pnpm workspace, tsconfig strict, eslint, prettier, vitest
+2. `d68ab8a` feat: packages/db ze schematem Drizzle i pierwszą migracją
+3. `c3704e3` feat: worker z pg-boss i jobem heartbeat co minutę
+4. `da35bbe` chore: CI w GitHub Actions (typecheck, lint, format, test z Postgresem)
+5. `40c38ea` feat(core): typ Money w jednostkach minor z dodawaniem i porównaniami
+6. `004d2f0` feat: core/totalCost — koszt wyjazdu z rozbiciem na lot, nocleg i bagaż
+7. `2b04aa3` feat: core/scoreDeal — score okazji względem mediany historii trasy
+8. `8f4606c` feat: core/expandWatch — zapytania daty × noce × lotniska z limitem i rotacją
+9. `c572c76` feat: core/limits — dobowy budżet zapytań na watch i podział na skan
+10. `10eca62` feat: interfejsy FlightProvider i StayProvider w packages/providers
+11. `71a618a` docs: BLOKADA adaptera SerpAPI Google Flights w NIGHT_LOG
+12. `b18ed6c` feat: cache odpowiedzi providerów w pamięci z TTL 6 h
+13. `75bf1d4` docs: BLOKADA adaptera SerpAPI Google Hotels w NIGHT_LOG
+14. `e24ebc8` feat: job scan-watch z planowaniem skanów co 15 minut
+15. `5cc431b` feat: zapis price_history w scan-watch bez duplikatów obserwacji
+16. `59d32ca` feat: interfejs NotificationChannel i typ AlertMessage (bez TelegramChannel)
+17. `509386d` feat: job notify z quiet hours, limitem dziennym i deduplikacją przez alerts_sent
+18. `9875c44` test: limit czasu testów z pg-boss dłuższy niż ich oczekiwanie na job
+19. `60b983a` feat: seed z użytkownikiem testowym i 3 watchami POZ → dowolnie
+20. ten commit — podsumowanie w NIGHT_LOG.md
+
+(Commit 5 ma zakres w typie — `feat(core):` — wbrew formatowi `<typ>: <opis>`; nie poprawiałem,
+bo wymagałoby to przepisania historii i force pusha.)
+
+### Blokady
+1. **M2.2 adapter SerpAPI Google Flights** — serpapi.com zablokowane przez politykę sieci sesji,
+   nie da się potwierdzić kształtu odpowiedzi (m.in. cena za osobę czy za wszystkich, lot
+   powrotny, „dowolny kierunek”). Potrzebne: nagrana odpowiedź JSON albo dostęp do serpapi.com
+   + decyzja, jak obsłużyć watch „dowolnie”.
+2. **M2.4 adapter SerpAPI Google Hotels** — j.w.; dodatkowo decyzja, jak zamienić kod IATA celu
+   na miejsce noclegu.
+3. **M3.3 TelegramChannel** — core.telegram.org zablokowane. Potrzebne: dostęp albo fragmenty
+   dokumentacji Bot API (`sendMessage`, `Message`, `ResponseParameters`) + nagrane odpowiedzi.
+
+Skutek: pętla end-to-end **nie działa jeszcze w uruchomionym workerze**. `scan-watch` i `notify`
+są zaimplementowane i przetestowane na podstawionych providerach/kanale, ale `main.ts`
+rejestruje tylko `heartbeat` — rejestracja reszty to kilka linijek po dodaniu adapterów i kanału
+(opis przy M3.1 i w komentarzu w `apps/worker/src/main.ts`).
+
+### 3 najważniejsze rzeczy do przejrzenia przez człowieka
+1. **Wartości produktowe, które ustawiłem roboczo** — wszystkie w `packages/core`, każda
+   z testami, łatwo zmienić:
+   `DAILY_QUERY_BUDGET_PER_WATCH = 24` i `MAX_STAY_QUERIES_PER_SCAN = 3` (`limits.ts`, koszt!),
+   `MIN_DEAL_SCORE = 0`, `MAX_ALERTS_PER_USER_PER_DAY = 3`, `SIGNIFICANT_DROP_PERCENT = 5`
+   (`alertPolicy.ts`), `BAGGAGE_ESTIMATE_PER_PERSON_MINOR = 0` (`totalCost.ts`),
+   `MIN_HISTORY_SAMPLES = 5`, `HISTORY_WINDOW_DAYS = 90` (`scoreDeal.ts`).
+2. **Interfejs providerów (`packages/providers/src/types.ts`) względem prawdziwego SerpAPI** —
+   zaprojektowany bez dostępu do dokumentacji. Przy pisaniu adapterów sprawdźcie zwłaszcza
+   `pricePerPerson`, `inbound: null` (lot powrotny) i `destination: null` („dowolnie”);
+   od tego zależą `scan-watch` i seed.
+3. **Treść alertu i zachowanie powiadomień** (`core/alertMessage.ts`, `core/alertPolicy.ts`):
+   przeczytajcie tytuł/treść na głos (ANTI_SLOP), sprawdźcie, czy alert odłożony przez quiet
+   hours ma czekać (teraz: tak), i czy deduplikacja „trasa + daty” jest tym, czego chcecie.
