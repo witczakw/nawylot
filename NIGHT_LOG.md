@@ -313,3 +313,17 @@ działa lot powrotny (`departure_token`) i „dowolny kierunek” — potrzebuj�
 
 **Do sprawdzenia ręcznie**
 - Czy przy kilku instancjach workera (np. Railway z repliką) nie przejść na tabelę w Postgresie.
+
+---
+
+## M2.4 — adapter SerpAPI Google Hotels
+
+BLOKADA: adapter SerpAPI Google Hotels — nie mogę potwierdzić kształtu odpowiedzi API
+w dokumentacji (serpapi.com zablokowane przez politykę sieci tej sesji; brak innego oficjalnego
+opisu pól). Niewiadome: czy cena za noc jest za pokój czy za osobę, z podatkami czy bez, jak
+wygląda link do rezerwacji u OTA, jak podać miejsce (nazwa miasta zamiast kodu IATA?) —
+potrzebuję od zespołu: nagranej odpowiedzi JSON (`engine=google_hotels`, np. Barcelona,
+17–19.10, 1 i 2 dorosłych, `currency=PLN`) do `packages/providers/fixtures/` albo dostępu do
+serpapi.com; oraz decyzji, skąd brać nazwę miejsca dla kodu IATA celu (stała tabela lotnisk?).
+
+Żaden kod adaptera nie został dodany.
