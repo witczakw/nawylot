@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg font-sans text-body text-text antialiased;
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: none;
+  }
+  ::selection {
+    background: var(--c-tag-green);
+    color: var(--c-tag-green-fg);
+  }
+}
+
+@layer utilities {
+  .nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .pb-safe {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
