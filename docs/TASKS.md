@@ -1,30 +1,30 @@
 # Plan zadań (bierz od góry, odhaczaj po zrobieniu)
 
 ## M0 — szkielet
-- [ ] pnpm workspace, tsconfig bazowy (strict), eslint, prettier, vitest
-- [ ] docker-compose z Postgresem, `packages/db` z Drizzle + pierwsza migracja (tabele z ARCHITECTURE.md)
-- [ ] `apps/worker` z pg-boss: job `heartbeat` co minutę, logowanie
-- [ ] CI (GitHub Actions): typecheck + test + lint
+- [x] pnpm workspace, tsconfig bazowy (strict), eslint, prettier, vitest
+- [x] docker-compose z Postgresem, `packages/db` z Drizzle + pierwsza migracja (tabele z ARCHITECTURE.md)
+- [x] `apps/worker` z pg-boss: job `heartbeat` co minutę, logowanie
+- [x] CI (GitHub Actions): typecheck + test + lint
 
 ## M1 — rdzeń domeny (bez sieci)
-- [ ] `core/money.ts` — typ Money (minor units + waluta), dodawanie, porównania, testy
-- [ ] `core/totalCost.ts` — lot × pax + nocleg × noce + szacunek bagażu, testy
-- [ ] `core/scoreDeal.ts` — score względem mediany z price_history (brak historii → neutralny), testy
-- [ ] `core/expandWatch.ts` — rozwinięcie watcha w listę zapytań (daty × długości × lotniska) z limitem, testy
-- [ ] `core/limits.ts` — budżet zapytań na watch/dzień
+- [x] `core/money.ts` — typ Money (minor units + waluta), dodawanie, porównania, testy
+- [x] `core/totalCost.ts` — lot × pax + nocleg × noce + szacunek bagażu, testy
+- [x] `core/scoreDeal.ts` — score względem mediany z price_history (brak historii → neutralny), testy
+- [x] `core/expandWatch.ts` — rozwinięcie watcha w listę zapytań (daty × długości × lotniska) z limitem, testy
+- [x] `core/limits.ts` — budżet zapytań na watch/dzień
 
 ## M2 — pierwszy provider
-- [ ] interfejsy w `providers/src/types.ts`
+- [x] interfejsy w `providers/src/types.ts`
 - [ ] adapter SerpAPI Google Flights + fixture'y JSON do testów (bez sieci w testach)
-- [ ] cache odpowiedzi (tabela lub in-memory TTL 6h)
+- [x] cache odpowiedzi (tabela lub in-memory TTL 6h)
 - [ ] adapter SerpAPI Google Hotels
 
 ## M3 — pętla end-to-end
-- [ ] job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
-- [ ] zapis price_history
+- [x] job `scan-watch`: expand → flights → top-N → stays → totalCost → score → zapis
+- [x] zapis price_history
 - [ ] `packages/notifications`: interfejs kanału + TelegramChannel
-- [ ] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
-- [ ] seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
+- [x] job `notify`: dispatch po preferencjach użytkownika, quiet hours, deduplikacja przez alerts_sent
+- [x] seed: 3 przykładowe watche (POZ → dowolnie, październik, 2–3 noce, 1000 zł/os)
 
 ## M4 — web
 - [ ] podpiąć `src/styles/tokens.css`, Tailwind v4, font Overpass; strona `/design` z próbkami kolorów i kartą okazji

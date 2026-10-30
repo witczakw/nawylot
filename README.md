@@ -26,7 +26,14 @@ pnpm install
 cp .env.example .env        # uzupełnij klucze
 docker compose up -d db     # lokalny Postgres
 pnpm db:migrate
+pnpm db:seed                # opcjonalnie: użytkownik testowy i 3 watche POZ → dowolnie
 pnpm dev                    # web + worker
+```
+
+Testy integracyjne z bazą używają osobnej bazy i są pomijane, gdy `TEST_DATABASE_URL` nie jest ustawiony:
+```bash
+docker compose exec db createdb -U nawylot nawylot_test
+TEST_DATABASE_URL=postgres://nawylot:nawylot@localhost:5432/nawylot_test pnpm test
 ```
 
 ## Praca z Claude Code

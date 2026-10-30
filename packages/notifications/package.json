@@ -1,0 +1,16 @@
+{
+  "name": "@nawylot/notifications",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@nawylot/core": "workspace:*"
+  }
+}
